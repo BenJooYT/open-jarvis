@@ -29,12 +29,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Prepare Gradle command
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            echo "GRADLE_CMD=./gradlew" >> $GITHUB_ENV
+          else
+            sudo apt-get update
+            sudo apt-get install -y gradle
+            echo "GRADLE_CMD=gradle" >> $GITHUB_ENV
+          fi
 
       - name: Build release (unsigned) APK
-        run: |
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+        run: $GRADLE_CMD :app:assembleRelease --no-daemon --stacktrace
 
       - name: List generated APKs
         run: ls -R app/build/outputs || true
